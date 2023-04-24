@@ -28,7 +28,7 @@ function GM:Move(pl, move)
 			move:SetMaxSpeed(move:GetMaxSpeed() * 0.95)
 			move:SetMaxClientSpeed(move:GetMaxClientSpeed() * 0.95)
 		end
-	elseif pl:CallZombieFunction1("Move", move) then
+	elseif pl:CallZombieFunction("Move", move) then
 		return
 	end
 
@@ -51,7 +51,7 @@ function GM:ScalePlayerDamage(pl, hitgroup, dmginfo)
 		pl.m_LastHeadShot = CurTime()
 	end
 
-	if not pl:CallZombieFunction2("ScalePlayerDamage", hitgroup, dmginfo) then
+	if not pl:CallZombieFunction("ScalePlayerDamage", hitgroup, dmginfo) then
 		if hitgroup == HITGROUP_HEAD then
 			dmginfo:SetDamage(dmginfo:GetDamage() * 2)
 		elseif hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG or hitgroup == HITGROUP_GEAR then

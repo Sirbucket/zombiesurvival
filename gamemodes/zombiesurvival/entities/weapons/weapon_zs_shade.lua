@@ -164,13 +164,13 @@ if not CLIENT then return end
 function SWEP:PreDrawViewModel(vm)
 	local owner = self:GetOwner()
 	if owner:IsValid() then
-		owner:CallZombieFunction1("PreRenderEffects", vm)
+		owner:CallZombieFunction("PreRenderEffects", vm)
 	end
 end
 
 function SWEP:PostDrawViewModel(vm)
 	local owner = self:GetOwner()
 	if owner:IsValid() then
-		owner:CallZombieFunction1("PostRenderEffects", vm)
+		owner:CallZombieFunction("PostRenderEffects", vm)
 	end
 end

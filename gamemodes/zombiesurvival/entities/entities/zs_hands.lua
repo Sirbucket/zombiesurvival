@@ -70,7 +70,7 @@ function ENT:AttachToViewmodel( vm )
 end
 
 function ENT:Draw()
-	if MySelf:CallZombieFunction1("DrawHands", self) then return end
+	if MySelf:CallZombieFunction("DrawHands", self) then return end
 
 	self:DrawModel()
 end

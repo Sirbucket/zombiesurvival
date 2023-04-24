@@ -432,63 +432,13 @@ end
 -- vararg was culled out because it created tables. Should call the one with appropriate # of args.
 local zctab
 local zcfunc
-function meta:CallZombieFunction0(funcname)
-	if P_Team(self) == TEAM_UNDEAD then
-		zctab = ZombieClasses[E_GetTable(self).Class or GAMEMODE.DefaultZombieClass]
-		zcfunc = zctab[funcname]
-		if zcfunc then
-			return zcfunc(zctab, self)
-		end
-	end
-end
 
-function meta:CallZombieFunction1(funcname, a1)
-	if P_Team(self) == TEAM_UNDEAD then
+function meta:CallZombieFunction(funcname, ...)
+	if self:IsZombie() then
 		zctab = ZombieClasses[E_GetTable(self).Class or GAMEMODE.DefaultZombieClass]
 		zcfunc = zctab[funcname]
 		if zcfunc then
-			return zcfunc(zctab, self, a1)
-		end
-	end
-end
-
-function meta:CallZombieFunction2(funcname, a1, a2)
-	if P_Team(self) == TEAM_UNDEAD then
-		zctab = ZombieClasses[E_GetTable(self).Class or GAMEMODE.DefaultZombieClass]
-		zcfunc = zctab[funcname]
-		if zcfunc then
-			return zcfunc(zctab, self, a1, a2)
-		end
-	end
-end
-
-function meta:CallZombieFunction3(funcname, a1, a2, a3)
-	if P_Team(self) == TEAM_UNDEAD then
-		zctab = ZombieClasses[E_GetTable(self).Class or GAMEMODE.DefaultZombieClass]
-		zcfunc = zctab[funcname]
-		if zcfunc then
-			return zcfunc(zctab, self, a1, a2, a3)
-		end
-	end
-end
-
-function meta:CallZombieFunction4(funcname, a1, a2, a3, a4)
-	if P_Team(self) == TEAM_UNDEAD then
-		zctab = ZombieClasses[E_GetTable(self).Class or GAMEMODE.DefaultZombieClass]
-		zcfunc = zctab[funcname]
-		if zcfunc then
-			return zcfunc(zctab, self, a1, a2, a3, a4)
-		end
-	end
-end
-meta.CallZombieFunction = meta.CallZombieFunction4 -- 4 should be enough for legacy.
-
-function meta:CallZombieFunction5(funcname, a1, a2, a3, a4, a5)
-	if P_Team(self) == TEAM_UNDEAD then
-		zctab = ZombieClasses[E_GetTable(self).Class or GAMEMODE.DefaultZombieClass]
-		zcfunc = zctab[funcname]
-		if zcfunc then
-			return zcfunc(zctab, self, a1, a2, a3, a4, a5)
+			return zcfunc(zctab, self, ...)
 		end
 	end
 end
@@ -517,17 +467,38 @@ function meta:SetHumanSpeed(speed)
 	if P_Team(self) == TEAM_HUMAN then self:SetSpeed(speed) end
 end
 
-function meta:ResetSpeed(noset, health)
-	if not self:IsValid() then return end
+function meta:GetWeapon()
+	local wep = self:GetActiveWeapon()
+	return E_IsValid(wep) and wep or NULL
+end
 
-	if P_Team(self) == TEAM_UNDEAD then
+function meta:IsHuman()
+	return E_IsValid(self) and P_Team(self) == TEAM_HUMAN
+end
+
+function meta:IsLivingHuman()
+	return self:IsHuman() and self:Alive()
+end
+
+function meta:IsZombie()
+	return E_IsValid(self) and P_Team(self) == TEAM_UNDEAD
+end
+
+function meta:IsLivingZombie()
+	return self:IsZombie() and self:Alive()
+end
+
+function meta:ResetSpeed(noset, health)
+	if not E_IsValid(self) then return end
+
+	if self:IsZombie() then
 		local speed = math.max(140, self:GetZombieClassTable().Speed * GAMEMODE.ZombieSpeedMultiplier - (GAMEMODE.ObjectiveMap and 20 or 0))
 
 		self:SetSpeed(speed)
 		return speed
 	end
 
-	local wep = self:GetActiveWeapon()
+	local wep = self:GetWeapon()
 	local speed
 
 	if wep:IsValid() and wep.GetWalkSpeed then

@@ -105,6 +105,6 @@ function GM:_CreateMove(cmd)
 			cmd:SetButtons(buttons - IN_ZOOM)
 		end
 
-		MySelf:CallZombieFunction1("CreateMove", cmd)
+		MySelf:CallZombieFunction("CreateMove", cmd)
 	end
 end

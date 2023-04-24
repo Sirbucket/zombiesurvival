@@ -78,7 +78,7 @@ function meta:ProcessDamage(dmginfo)
 			end
 		end
 
-		return not dmgbypass and self:CallZombieFunction1("ProcessDamage", dmginfo)
+		return not dmgbypass and self:CallZombieFunction("ProcessDamage", dmginfo)
 	end
 
 	-- Opted for multiplicative.
@@ -789,7 +789,7 @@ function meta:SecondWind(pl)
 	self:SetHealth(self:Health() * 0.2)
 	self:SetEyeAngles(angles)
 
-	self:CallZombieFunction0("OnSecondWind")
+	self:CallZombieFunction("OnSecondWind")
 end
 
 function meta:DropAll()
@@ -1098,7 +1098,7 @@ function meta:SetZombieClass(cl, onlyupdate, filter)
 		return
 	end
 
-	self:CallZombieFunction0("SwitchedAway")
+	self:CallZombieFunction("SwitchedAway")
 
 	local classtab = GAMEMODE.ZombieClasses[cl]
 	if classtab then
@@ -1106,7 +1106,7 @@ function meta:SetZombieClass(cl, onlyupdate, filter)
 		if P_Team(self) == TEAM_UNDEAD then
 			self:DoHulls(cl)
 		end
-		self:CallZombieFunction0("SwitchedTo")
+		self:CallZombieFunction("SwitchedTo")
 
 		net.Start("zs_zclass")
 			net.WriteEntity(self)

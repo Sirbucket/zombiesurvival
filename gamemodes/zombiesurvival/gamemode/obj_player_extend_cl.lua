@@ -178,12 +178,12 @@ function meta:GivePenalty(amount)
 end
 
 function meta:SetZombieClass(cl)
-	self:CallZombieFunction0("SwitchedAway")
+	self:CallZombieFunction("SwitchedAway")
 
 	local classtab = GAMEMODE.ZombieClasses[cl]
 	if classtab then
 		self.Class = classtab.Index or cl
-		self:CallZombieFunction0("SwitchedTo")
+		self:CallZombieFunction("SwitchedTo")
 	end
 end
 

@@ -424,7 +424,7 @@ net.Receive("zs_pl_kill_pl", function(length)
 			end
 		end
 
-		victim:CallZombieFunction5("OnKilled", attacker, attacker, attacker == victim, headshot, DamageInfo())
+		victim:CallZombieFunction("OnKilled", attacker, attacker, attacker == victim, headshot, DamageInfo())
 
 		MsgC(team.GetColor(attackerteam), attackername, color_white, " killed ", team.GetColor(victimteam), victimname, color_white, " with ", COLOR_YELLOW, inflictor, "\n")
 
@@ -453,7 +453,7 @@ net.Receive("zs_pls_kill_pl", function(length)
 			gamemode.Call("LocalPlayerDied", attackername.." and "..assistername)
 		end
 
-		victim:CallZombieFunction5("OnKilled", attacker, attacker, attacker == victim, headshot, DamageInfo())
+		victim:CallZombieFunction("OnKilled", attacker, attacker, attacker == victim, headshot, DamageInfo())
 
 		MsgC(team.GetColor(attackerteam), attackername, " and ", team.GetColor(attackerteam), assistername, color_white, " killed ", team.GetColor(victimteam), victimname, color_white, " with ", COLOR_YELLOW, inflictor, "\n")
 
@@ -470,7 +470,7 @@ net.Receive("zs_pl_kill_self", function(length)
 			gamemode.Call("LocalPlayerDied")
 		end
 
-		victim:CallZombieFunction5("OnKilled", victim, victim, true, false, DamageInfo())
+		victim:CallZombieFunction("OnKilled", victim, victim, true, false, DamageInfo())
 
 		local victimname = victim:Name()
 
@@ -505,7 +505,7 @@ net.Receive("zs_death", function(length)
 			gamemode.Call("LocalPlayerDied")
 		end
 
-		victim:CallZombieFunction5("OnKilled", attacker, NULL, attacker == victim, false, DamageInfo())
+		victim:CallZombieFunction("OnKilled", attacker, NULL, attacker == victim, false, DamageInfo())
 
 		local victimname = victim:Name()
 

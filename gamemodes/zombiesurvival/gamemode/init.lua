@@ -1967,7 +1967,7 @@ function GM:ScalePlayerDamage(pl, hitgroup, dmginfo)
 
 	--local crouchpunish = pl:ShouldCrouchJumpPunish()
 
-	if not pl:CallZombieFunction2("ScalePlayerDamage", hitgroup, dmginfo) then
+	if not pl:CallZombieFunction("ScalePlayerDamage", hitgroup, dmginfo) then
 		if hitgroup == HITGROUP_HEAD then
 			dmginfo:SetDamage(dmginfo:GetDamage() * (inflictor.HeadshotMulti or 2) * (attacker:IsPlayer() and attacker:GetStatus("renegade") and 1.1 or 1))
 		elseif hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG then
@@ -1978,7 +1978,7 @@ function GM:ScalePlayerDamage(pl, hitgroup, dmginfo)
 		end
 	end
 
-	if (hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG) and self:PlayerShouldTakeDamage(pl, dmginfo:GetAttacker()) and not pl:CallZombieFunction1("IgnoreLegDamage", dmginfo) then
+	if (hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG) and self:PlayerShouldTakeDamage(pl, dmginfo:GetAttacker()) and not pl:CallZombieFunction("IgnoreLegDamage", dmginfo) then
 		pl:AddLegDamage(
 			pl:ShouldCrouchJumpPunish() and not (pl.LastBarricadeHit and pl.LastBarricadeHit + 2 > CurTime()) and dmginfo:GetDamage()/4
 			or dmginfo:GetDamage()
@@ -3282,7 +3282,7 @@ function GM:KeyPress(pl, key)
 					pl:ResetSpeed()
 				end
 			elseif pl:Team() == TEAM_UNDEAD then
-				pl:CallZombieFunction0("AltUse")
+				pl:CallZombieFunction("AltUse")
 			end
 		end
 	elseif key == IN_ZOOM then
@@ -3415,7 +3415,7 @@ function GM:CanPlayerSuicide(pl)
 			end
 		end
 	elseif pl:Team() == TEAM_UNDEAD then
-		local ret = pl:CallZombieFunction0("CanPlayerSuicide")
+		local ret = pl:CallZombieFunction("CanPlayerSuicide")
 		if ret == false then return false end
 	end
 
@@ -3585,7 +3585,7 @@ function GM:DoPlayerDeath(pl, attacker, dmginfo)
 		util.Effect("headshot", effectdata, true, true)
 	end
 
-	if not pl:CallZombieFunction5("OnKilled", attacker, inflictor, suicide, headshot, dmginfo) then
+	if not pl:CallZombieFunction("OnKilled", attacker, inflictor, suicide, headshot, dmginfo) then
 		if pl:Health() <= -70 and not pl.NoGibs and not self.ZombieEscape then
 			pl:Gib(dmginfo)
 		elseif not pl.KnockedDown then
@@ -3653,7 +3653,7 @@ function GM:DoPlayerDeath(pl, attacker, dmginfo)
 			timer.Simple(0, function() if pl:IsValid() then pl:SendLifeStats() end end)
 		end
 
-		pl:CallZombieFunction5("PostOnKilled", attacker, inflictor, suicide, headshot, dmginfo)
+		pl:CallZombieFunction("PostOnKilled", attacker, inflictor, suicide, headshot, dmginfo)
 	elseif plteam == TEAM_HUMAN then
 		pl.NextSpawnTime = ct + 4
 
@@ -3696,7 +3696,7 @@ function GM:DoPlayerDeath(pl, attacker, dmginfo)
 		end
 	end
 
-	if revive or pl:CallZombieFunction2("NoDeathMessage", attacker, dmginfo) or pl:IsSpectator() then return end
+	if revive or pl:CallZombieFunction("NoDeathMessage", attacker, dmginfo) or pl:IsSpectator() then return end
 
 	if attacker == pl then
 		net.Start("zs_pl_kill_self")
@@ -3934,7 +3934,7 @@ function GM:PlayerSpawn(pl)
 			if current and current:IsValid() then
 				current:SetModel(overridemodel)
 				current:ResetBones()
-				pl:CallZombieFunction1("ManipulateOverrideModel", current)
+				pl:CallZombieFunction("ManipulateOverrideModel", current)
 			end
 		else
 			pl:RemoveStatus("overridemodel", false, true)
@@ -3947,7 +3947,7 @@ function GM:PlayerSpawn(pl)
 
 		GAMEMODE.StatTracking:IncreaseElementKV(STATTRACK_TYPE_ZOMBIECLASS, classtab.Name, "ClassSpawn", 1)
 
-		pl:CallZombieFunction0("OnSpawned")
+		pl:CallZombieFunction("OnSpawned")
 	elseif pl:Team() == TEAM_HUMAN then
 		pl.PointQueue = 0
 		pl.PackedItems = {}

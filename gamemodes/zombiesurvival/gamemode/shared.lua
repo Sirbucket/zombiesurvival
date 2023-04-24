@@ -774,7 +774,7 @@ function GM:GetFearMeterPower(pos, teamid, ignore)
 	local power = 0
 
 	for _, pl in pairs(player.GetAll()) do
-		if pl ~= ignore and PTeam(pl) == teamid and not pl:CallZombieFunction0("DoesntGiveFear") and pl:Alive() then
+		if pl ~= ignore and PTeam(pl) == teamid and not pl:CallZombieFunction("DoesntGiveFear") and pl:Alive() then
 			dist = pl:GetPos():DistToSqr(pos)
 			if dist <= FEAR_RANGE then
 				power = power + (1 - dist / FEAR_RANGE) * (pl:GetZombieClassTable().FearPerInstance or FEAR_PERINSTANCE)
