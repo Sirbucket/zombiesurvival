@@ -31,10 +31,12 @@ local E_IsValid = M_Entity.IsValid
 local E_GetDTBool = M_Entity.GetDTBool
 local E_GetTable = M_Entity.GetTable
 
+---Grabs players steam ID and user name
 function meta:LogID()
 	return "<"..self:SteamID().."> "..self:Name()
 end
 
+---Grabs max zombie health or max health, use over GetMaxHealth
 function meta:GetMaxHealthEx()
 	if P_Team(self) == TEAM_UNDEAD then
 		return self:GetMaxZombieHealth()
@@ -43,6 +45,8 @@ function meta:GetMaxHealthEx()
 	return self:GetMaxHealth()
 end
 
+---Dismember a body part 
+---@param dismembermenttype number
 function meta:Dismember(dismembermenttype)
 	local effectdata = EffectData()
 		effectdata:SetOrigin(self:EyePos())
@@ -51,14 +55,20 @@ function meta:Dismember(dismembermenttype)
 	util.Effect("dismemberment", effectdata, true, true)
 end
 
+---Random custom anim event 
+---@param event
+---@param maxrandom_s1 number
 function meta:DoRandomEvent(event, maxrandom_s1)
 	self:DoCustomAnimEvent(event, math.ceil(util_SharedRandom("anim", 0, maxrandom_s1, self:EntIndex())))
 end
 
+---Attack event for zombies
 function meta:DoZombieEvent()
 	self:DoRandomEvent(PLAYERANIMEVENT_ATTACK_PRIMARY, 7)
 end
 
+---Flinch event
+---@param hitgroup number
 function meta:DoFlinchEvent(hitgroup)
 	local base = util_SharedRandom("flinch", 1, self:EntIndex())
 	if hitgroup == HITGROUP_HEAD then
@@ -82,6 +92,7 @@ function meta:DoFlinchEvent(hitgroup)
 	end
 end
 
+---Random flinch event
 function meta:DoRandomFlinchEvent()
 	self:DoRandomEvent(PLAYERANIMEVENT_FLINCH_HEAD, 12)
 end
@@ -99,6 +110,9 @@ local FlinchSequences = {
 	"flinch_stomach_01",
 	"flinch_stomach_02",
 }
+
+---Flinch anim
+---@param data number
 function meta:DoFlinchAnim(data)
 	local seq = FlinchSequences[data] or FlinchSequences[1]
 	if seq then
@@ -117,6 +131,9 @@ local ZombieAttackSequences = {
 	"zombie_attack_05",
 	"zombie_attack_06"
 }
+
+---Zombie attack anim
+---@param data number
 function meta:DoZombieAttackAnim(data)
 	local seq = ZombieAttackSequences[data] or ZombieAttackSequences[1]
 	if seq then
@@ -127,32 +144,38 @@ function meta:DoZombieAttackAnim(data)
 	end
 end
 
+---Player is Spectator
 function meta:IsSpectator()
-	return P_Team(self) == TEAM_SPECTATOR
+	return E_IsValid(self) and P_Team(self) == TEAM_SPECTATOR
 end
 
+---Zombie aura range
 function meta:GetAuraRange()
 	if GAMEMODE.ZombieEscape then
 		return 8192
 	end
 
-	local wep = self:GetActiveWeapon()
-	return wep:IsValid() and wep.GetAuraRange and wep:GetAuraRange() or 2048
+	local wep = self:GetWeapon()
+	return wep.GetAuraRange and wep:GetAuraRange() or 2048
 end
 
+---Zombie aura range squared
 function meta:GetAuraRangeSqr()
 	local r = self:GetAuraRange()
 	return r * r
 end
 
+---Get poison damage
 function meta:GetPoisonDamage()
 	return self.Poison and self.Poison:IsValid() and self.Poison:GetDamage() or 0
 end
 
+---Get bleed damage
 function meta:GetBleedDamage()
 	return self.Bleed and self.Bleed:IsValid() and self.Bleed:GetDamage() or 0
 end
 
+---Weapon function (reload etc)
 function meta:CallWeaponFunction(funcname, ...)
 	local wep = self:GetActiveWeapon()
 	if wep:IsValid() and wep[funcname] then
@@ -160,6 +183,7 @@ function meta:CallWeaponFunction(funcname, ...)
 	end
 end
 
+---Capped name size
 function meta:ClippedName()
 	local name = self:Name()
 	if #name > 16 then
@@ -169,6 +193,9 @@ function meta:ClippedName()
 	return name
 end
 
+---Get teleport destination 
+---@param not_from_sigil boolean 
+---@param corrupted boolean
 function meta:SigilTeleportDestination(not_from_sigil, corrupted)
 	local sigils = corrupted and GAMEMODE:GetCorruptedSigils() or GAMEMODE:GetUncorruptedSigils()
 
@@ -209,6 +236,7 @@ function meta:SigilTeleportDestination(not_from_sigil, corrupted)
 	return target, itarget
 end
 
+---Alternate use
 function meta:DispatchAltUse()
 	local tpexist = self:GetStatus("sigilteleport")
 	if tpexist and tpexist:IsValid() then
@@ -223,12 +251,15 @@ function meta:DispatchAltUse()
 	end
 end
 
+---View punch based on damage dealt 
+---@param damage number
 function meta:MeleeViewPunch(damage)
 	local maxpunch = (damage + 25) * 0.5
 	local minpunch = -maxpunch
 	self:ViewPunch(Angle(math.Rand(minpunch, maxpunch), math.Rand(minpunch, maxpunch), math.Rand(minpunch, maxpunch)))
 end
 
+---Range check for arsenal crate
 function meta:NearArsenalCrate()
 	local pos = self:EyePos()
 
@@ -249,6 +280,7 @@ function meta:NearArsenalCrate()
 end
 meta.IsNearArsenalCrate = meta.NearArsenalCrate
 
+---Range check for remantler
 function meta:NearRemantler()
 	local pos = self:EyePos()
 
@@ -264,13 +296,12 @@ function meta:NearRemantler()
 	return false
 end
 
+---Get resupply ammo type based on weapon held
 function meta:GetResupplyAmmoType()
 	local ammotype
 	if not self.ResupplyChoice then
-		local wep = self:GetActiveWeapon()
-		if wep:IsValid() then
-			ammotype = wep.GetResupplyAmmoType and wep:GetResupplyAmmoType() or wep.ResupplyAmmoType or wep:GetPrimaryAmmoTypeString()
-		end
+		local wep = self:GetWeapon()
+		ammotype = wep.GetResupplyAmmoType and wep:GetResupplyAmmoType() or wep.ResupplyAmmoType or wep:GetPrimaryAmmoTypeString()
 	end
 
 	ammotype = ammotype and ammotype:lower() or self.ResupplyChoice
@@ -282,20 +313,25 @@ function meta:GetResupplyAmmoType()
 	return ammotype
 end
 
+---Force zombie class to this
 function meta:SetZombieClassName(classname)
 	if GAMEMODE.ZombieClasses[classname] then
 		self:SetZombieClass(GAMEMODE.ZombieClasses[classname].Index)
 	end
 end
 
+---Get points
 function meta:GetPoints()
 	return self:GetDTInt(1)
 end
 
+---Get blood armor
 function meta:GetBloodArmor()
 	return self:GetDTInt(DT_PLAYER_INT_BLOODARMOR)
 end
 
+---Add leg slow
+---@param damage number
 function meta:AddLegDamage(damage)
 	if self.SpawnProtection then return end
 
@@ -308,6 +344,11 @@ function meta:AddLegDamage(damage)
 	self:SetLegDamage(legdmg)
 end
 
+---Advanced leg slow function, generally preferable to AddLegDamage 
+---@param damage number
+---@param attacker entity 
+---@param inflictor entity 
+---@param type number
 function meta:AddLegDamageExt(damage, attacker, inflictor, type)
 	inflictor = inflictor or attacker
 
@@ -339,6 +380,8 @@ function meta:AddLegDamageExt(damage, attacker, inflictor, type)
 	end
 end
 
+---Force set leg damage 
+---@param damage number
 function meta:SetLegDamage(damage)
 	self.LegDamage = CurTime() + math.min(GAMEMODE.MaxLegDamage, damage * 0.125)
 	if SERVER then
@@ -346,6 +389,8 @@ function meta:SetLegDamage(damage)
 	end
 end
 
+---Force set leg damage based on time 
+---@param time number
 function meta:RawSetLegDamage(time)
 	self.LegDamage = math.min(CurTime() + GAMEMODE.MaxLegDamage, time)
 	if SERVER then
@@ -353,18 +398,24 @@ function meta:RawSetLegDamage(time)
 	end
 end
 
+---Cap leg damage based on time 
+---@param time number
 function meta:RawCapLegDamage(time)
 	self:RawSetLegDamage(math.max(self.LegDamage or 0, time))
 end
 
+---Get leg damage
 function meta:GetLegDamage()
 	return math.max(0, (self.LegDamage or 0) - CurTime())
 end
 
+---Get flat leg damage value
 function meta:GetFlatLegDamage()
 	return math.max(0, ((self.LegDamage or 0) - CurTime()) * 8)
 end
 
+---Add arm damage
+---@param damage number
 function meta:AddArmDamage(damage)
 	if self.SpawnProtection then return end
 
@@ -377,6 +428,8 @@ function meta:AddArmDamage(damage)
 	self:SetArmDamage(armdmg)
 end
 
+---Set arm damage 
+---@param damage number
 function meta:SetArmDamage(damage)
 	self.ArmDamage = CurTime() + math.min(GAMEMODE.MaxArmDamage, damage * 0.125)
 	if SERVER then
@@ -384,6 +437,8 @@ function meta:SetArmDamage(damage)
 	end
 end
 
+---Set arm damage based on time
+---@param time number
 function meta:RawSetArmDamage(time)
 	self.ArmDamage = math.min(CurTime() + GAMEMODE.MaxArmDamage, time)
 	if SERVER then
@@ -391,18 +446,23 @@ function meta:RawSetArmDamage(time)
 	end
 end
 
+---Cap arm damage
+---@param time number
 function meta:RawCapArmDamage(time)
 	self:RawSetArmDamage(math.max(self.ArmDamage or 0, time))
 end
 
+---Get arm damage
 function meta:GetArmDamage()
 	return math.max(0, (self.ArmDamage or 0) - CurTime())
 end
 
+---Get flat arm damage
 function meta:GetFlatArmDamage()
 	return math.max(0, ((self.ArmDamage or 0) - CurTime()) * 8)
 end
 
+---Flinch
 function meta:Flinch()
 	if CurTime() >= (self.NextFlinch or 0) then
 		self.NextFlinch = CurTime() + 0.75
@@ -415,6 +475,7 @@ function meta:Flinch()
 	end
 end
 
+---Get player zombie class
 function meta:GetZombieClass()
 	return self.Class or GAMEMODE.DefaultZombieClass
 end
@@ -424,6 +485,8 @@ if GAMEMODE then
 	ZombieClasses = GAMEMODE.ZombieClasses
 end
 hook.Add("Initialize", "LocalizeZombieClasses", function() ZombieClasses = GAMEMODE.ZombieClasses end)
+
+---Get player zombie class table
 function meta:GetZombieClassTable()
 	return ZombieClasses[self:GetZombieClass()]
 end
@@ -598,6 +661,9 @@ function meta:ResetJumpPower(noset)
 	return power
 end
 
+---Set barricade ghosting 
+---@param b boolean
+---@param fullspeed boolean
 function meta:SetBarricadeGhosting(b, fullspeed)
 	if self == NULL then return end --???
 
@@ -615,15 +681,19 @@ function meta:SetBarricadeGhosting(b, fullspeed)
 	self:ResetJumpPower()
 end
 
+---Get barricade ghosting
 function meta:GetBarricadeGhosting()
 	return E_GetDTBool(self, 0)
 end
 meta.IsBarricadeGhosting = meta.GetBarricadeGhosting
 
+---Check if you can ghost with it 
+---@param ent entity
 function meta:ShouldBarricadeGhostWith(ent)
 	return ent:IsBarricadeProp()
 end
 
+---Barricade ghost think
 function meta:BarricadeGhostingThink()
 	if E_GetDTBool(self, 1) then
 		if not self:ActiveBarricadeGhosting() then
@@ -645,6 +715,9 @@ function meta:BarricadeGhostingThink()
 end
 
 -- Needs to be as optimized as possible.
+
+---Check collisions 
+---@param ent entity
 function meta:ShouldNotCollide(ent)
 	if E_IsValid(ent) then
 		if getmetatable(ent) == meta then
@@ -662,6 +735,8 @@ function meta:ShouldNotCollide(ent)
 end
 
 meta.OldSetHealth = FindMetaTable("Entity").SetHealth
+---Set player health to this value
+---@param health number
 function meta:SetHealth(health)
 	self:OldSetHealth(health)
 	if P_Team(self) == TEAM_HUMAN and 1 <= health then
@@ -669,14 +744,17 @@ function meta:SetHealth(health)
 	end
 end
 
+---Is player headcrab
 function meta:IsHeadcrab()
-	return P_Team(self) == TEAM_UNDEAD and GAMEMODE.ZombieClasses[self:GetZombieClass()].IsHeadcrab
+	return self:IsZombie() and GAMEMODE.ZombieClasses[self:GetZombieClass()].IsHeadcrab
 end
 
+---Is player crawler
 function meta:IsTorso()
-	return P_Team(self) == TEAM_UNDEAD and GAMEMODE.ZombieClasses[self:GetZombieClass()].IsTorso
+	return self:IsZombie() and GAMEMODE.ZombieClasses[self:GetZombieClass()].IsTorso
 end
 
+---Stop velocity effectively
 function meta:AirBrake()
 	local vel = self:GetVelocity()
 
