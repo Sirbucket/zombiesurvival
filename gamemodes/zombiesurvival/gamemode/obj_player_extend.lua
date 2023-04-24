@@ -428,66 +428,89 @@ function meta:GetZombieClassTable()
 	return ZombieClasses[self:GetZombieClass()]
 end
 
--- Called a lot, so optimized
--- vararg was culled out because it created tables. Should call the one with appropriate # of args.
+
 local zctab
 local zcfunc
-
-function meta:CallZombieFunction(funcname, ...)
+---Calls zombie class functions (like OnKilled or ProcessDamage)
+---@param func_name string
+function meta:CallZombieFunction(func_name, ...)
 	if self:IsZombie() then
 		zctab = ZombieClasses[E_GetTable(self).Class or GAMEMODE.DefaultZombieClass]
-		zcfunc = zctab[funcname]
+		zcfunc = zctab[func_name]
 		if zcfunc then
 			return zcfunc(zctab, self, ...)
 		end
 	end
 end
 
+---Fires a traceline from the defined starting position or players firing position
+---@param distance number
+---@param mask number
+---@param filter function
+---@param start vector
 function meta:TraceLine(distance, mask, filter, start)
 	start = start or self:GetShootPos()
 	return util_TraceLine({start = start, endpos = start + self:GetAimVector() * distance, filter = filter or self, mask = mask})
 end
 
+---Fires a tracehull from the defined starting position or players firing position
+---@param distance number
+---@param mask number
+---@param size number
+---@param filter function
+---@param start vector
 function meta:TraceHull(distance, mask, size, filter, start)
 	start = start or self:GetShootPos()
 	return util_TraceHull({start = start, endpos = start + self:GetAimVector() * distance, filter = filter or self, mask = mask, mins = Vector(-size, -size, -size), maxs = Vector(size, size, size)})
 end
 
+--- Adjusts player speed statically
+---@param speed number
 function meta:SetSpeed(speed)
 	if not speed then speed = 200 end
 
-	local runspeed = self:GetBloodArmor() > 0 and self:IsSkillActive(SKILL_CARDIOTONIC) and speed + 40 or speed
+	local run_speed = self:GetBloodArmor() > 0 and self:IsSkillActive(SKILL_CARDIOTONIC) and speed + 40 or speed
 
 	self:SetWalkSpeed(speed)
-	self:SetRunSpeed(runspeed)
-	self:SetMaxSpeed(runspeed)
+	self:SetRunSpeed(run_speed)
+	self:SetMaxSpeed(run_speed)
 end
 
+--- Adjusts individual human speed statically
+---@param speed number
 function meta:SetHumanSpeed(speed)
 	if P_Team(self) == TEAM_HUMAN then self:SetSpeed(speed) end
 end
 
+--- Gets a valid player weapon, use over GetActiveWeapon
 function meta:GetWeapon()
 	local wep = self:GetActiveWeapon()
 	return E_IsValid(wep) and wep or NULL
 end
 
+--- Is a valid human
 function meta:IsHuman()
 	return E_IsValid(self) and P_Team(self) == TEAM_HUMAN
 end
 
+--- Is a valid living human
 function meta:IsLivingHuman()
 	return self:IsHuman() and self:Alive()
 end
 
+--- Is a valid zombie
 function meta:IsZombie()
 	return E_IsValid(self) and P_Team(self) == TEAM_UNDEAD
 end
 
+---Is a valid living zombie
 function meta:IsLivingZombie()
 	return self:IsZombie() and self:Alive()
 end
 
+--- Resets player speed to default
+---@param noset boolean
+---@param health number
 function meta:ResetSpeed(noset, health)
 	if not E_IsValid(self) then return end
 
@@ -501,7 +524,7 @@ function meta:ResetSpeed(noset, health)
 	local wep = self:GetWeapon()
 	local speed
 
-	if wep:IsValid() and wep.GetWalkSpeed then
+	if wep.GetWalkSpeed then
 		speed = wep:GetWalkSpeed()
 	end
 
@@ -517,7 +540,7 @@ function meta:ResetSpeed(noset, health)
 		speed = speed + self.SkillSpeedAdd
 	end
 
-	if self:IsSkillActive(SKILL_LIGHTWEIGHT) and wep:IsValid() and wep.IsMelee then
+	if self:IsSkillActive(SKILL_LIGHTWEIGHT) and wep.IsMelee then
 		speed = speed + 6
 	end
 
@@ -538,11 +561,13 @@ function meta:ResetSpeed(noset, health)
 	return speed
 end
 
+--- Resets a players jump power
+---@param noset boolean
 function meta:ResetJumpPower(noset)
 	local power = DEFAULT_JUMP_POWER
 
-	if P_Team(self) == TEAM_UNDEAD then
-		power = self:CallZombieFunction0("GetJumpPower") or power
+	if self:IsZombie() then
+		power = self:CallZombieFunction("GetJumpPower") or power
 
 		local classtab = self:GetZombieClassTable()
 		if classtab and classtab.JumpPower then
