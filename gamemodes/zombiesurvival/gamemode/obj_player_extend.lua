@@ -45,7 +45,7 @@ function meta:GetMaxHealthEx()
 	return self:GetMaxHealth()
 end
 
----Dismember a body part 
+---Dismember a body part
 ---@param dismembermenttype number
 function meta:Dismember(dismembermenttype)
 	local effectdata = EffectData()
@@ -55,7 +55,7 @@ function meta:Dismember(dismembermenttype)
 	util.Effect("dismemberment", effectdata, true, true)
 end
 
----Random custom anim event 
+---Random custom anim event
 ---@param event
 ---@param maxrandom_s1 number
 function meta:DoRandomEvent(event, maxrandom_s1)
@@ -193,15 +193,14 @@ function meta:ClippedName()
 	return name
 end
 
----Get teleport destination 
----@param not_from_sigil boolean 
+---Get teleport destination
+---@param not_from_sigil boolean
 ---@param corrupted boolean
 function meta:SigilTeleportDestination(not_from_sigil, corrupted)
 	local sigils = corrupted and GAMEMODE:GetCorruptedSigils() or GAMEMODE:GetUncorruptedSigils()
 
-	if not_from_sigil then
-		if #sigils == 0 then return end
-	elseif #sigils <= 1 then return end
+	local s_len = #sigils
+	if s_len <= 1 then return end
 
 	local mypos = self:GetPos()
 	local eyevector = self:GetAimVector()
@@ -209,8 +208,10 @@ function meta:SigilTeleportDestination(not_from_sigil, corrupted)
 	local dist = 999999999999
 	local spos, d, icurrent, target, itarget
 
+	local sigil
 	if not not_from_sigil then
-		for i, sigil in pairs(sigils) do
+		for i=1, s_len do
+			sigil = sigils[i]
 			d = sigil:GetPos():DistToSqr(mypos)
 			if d < dist then
 				dist = d
@@ -220,9 +221,10 @@ function meta:SigilTeleportDestination(not_from_sigil, corrupted)
 	end
 
 	dist = -1
-	for i, sigil in pairs(sigils) do
+	for i=1, s_len do
 		if i == icurrent then continue end
 
+		sigil = sigils[i]
 		spos = sigil:GetPos() - mypos
 		spos:Normalize()
 		d = spos:Dot(eyevector)
@@ -251,7 +253,7 @@ function meta:DispatchAltUse()
 	end
 end
 
----View punch based on damage dealt 
+---View punch based on damage dealt
 ---@param damage number
 function meta:MeleeViewPunch(damage)
 	local maxpunch = (damage + 25) * 0.5
@@ -268,8 +270,10 @@ function meta:NearArsenalCrate()
 	local arseents = {}
 	table.Add(arseents, ents.FindByClass("prop_arsenalcrate"))
 	table.Add(arseents, ents.FindByClass("status_arsenalpack"))
-
-	for _, ent in pairs(arseents) do
+	local a_len = #arseents
+	local ent
+	for i=1, a_len do
+		ent = arseents[i]
 		local nearest = ent:NearestPoint(pos)
 		if pos:DistToSqr(nearest) <= 10000 and (WorldVisible(pos, nearest) or self:TraceLine(100).Entity == ent) then -- 80^2
 			return true
@@ -285,8 +289,10 @@ function meta:NearRemantler()
 	local pos = self:EyePos()
 
 	local remantlers = ents.FindByClass("prop_remantler")
-
-	for _, ent in pairs(remantlers) do
+	local r_len = #remantlers
+	local ent
+	for i=1, r_len do
+		ent = remantlers[i]
 		local nearest = ent:NearestPoint(pos)
 		if pos:DistToSqr(nearest) <= 10000 and (WorldVisible(pos, nearest) or self:TraceLine(100).Entity == ent) then -- 80^2
 			return true
@@ -344,10 +350,10 @@ function meta:AddLegDamage(damage)
 	self:SetLegDamage(legdmg)
 end
 
----Advanced leg slow function, generally preferable to AddLegDamage 
+---Advanced leg slow function, generally preferable to AddLegDamage
 ---@param damage number
----@param attacker entity 
----@param inflictor entity 
+---@param attacker entity
+---@param inflictor entity
 ---@param type number
 function meta:AddLegDamageExt(damage, attacker, inflictor, type)
 	inflictor = inflictor or attacker
@@ -380,7 +386,7 @@ function meta:AddLegDamageExt(damage, attacker, inflictor, type)
 	end
 end
 
----Force set leg damage 
+---Force set leg damage
 ---@param damage number
 function meta:SetLegDamage(damage)
 	self.LegDamage = CurTime() + math.min(GAMEMODE.MaxLegDamage, damage * 0.125)
@@ -389,7 +395,7 @@ function meta:SetLegDamage(damage)
 	end
 end
 
----Force set leg damage based on time 
+---Force set leg damage based on time
 ---@param time number
 function meta:RawSetLegDamage(time)
 	self.LegDamage = math.min(CurTime() + GAMEMODE.MaxLegDamage, time)
@@ -398,7 +404,7 @@ function meta:RawSetLegDamage(time)
 	end
 end
 
----Cap leg damage based on time 
+---Cap leg damage based on time
 ---@param time number
 function meta:RawCapLegDamage(time)
 	self:RawSetLegDamage(math.max(self.LegDamage or 0, time))
@@ -428,7 +434,7 @@ function meta:AddArmDamage(damage)
 	self:SetArmDamage(armdmg)
 end
 
----Set arm damage 
+---Set arm damage
 ---@param damage number
 function meta:SetArmDamage(damage)
 	self.ArmDamage = CurTime() + math.min(GAMEMODE.MaxArmDamage, damage * 0.125)
@@ -649,8 +655,8 @@ function meta:ResetJumpPower(noset)
 		end
 	end
 
-	local wep = self:GetActiveWeapon()
-	if wep and wep.ResetJumpPower then
+	local wep = self:GetWeapon()
+	if wep.ResetJumpPower then
 		power = wep:ResetJumpPower(power) or power
 	end
 
@@ -661,7 +667,7 @@ function meta:ResetJumpPower(noset)
 	return power
 end
 
----Set barricade ghosting 
+---Set barricade ghosting
 ---@param b boolean
 ---@param fullspeed boolean
 function meta:SetBarricadeGhosting(b, fullspeed)
@@ -687,7 +693,7 @@ function meta:GetBarricadeGhosting()
 end
 meta.IsBarricadeGhosting = meta.GetBarricadeGhosting
 
----Check if you can ghost with it 
+---Check if you can ghost with it
 ---@param ent entity
 function meta:ShouldBarricadeGhostWith(ent)
 	return ent:IsBarricadeProp()
@@ -716,7 +722,7 @@ end
 
 -- Needs to be as optimized as possible.
 
----Check collisions 
+---Check collisions
 ---@param ent entity
 function meta:ShouldNotCollide(ent)
 	if E_IsValid(ent) then
@@ -806,12 +812,14 @@ function meta:GetDynamicTraceFilter()
 	return DynamicTraceFilter
 end
 
+---Fake hitbox
 local function CheckFHB(tr)
-	if tr.Entity.FHB and tr.Entity:IsValid() then
+	if E_IsValid(tr.Entity) and tr.Entity.FHB then
 		tr.Entity = tr.Entity:GetParent()
 	end
 end
 
+---Melee trace
 function meta:MeleeTrace(distance, size, start, dir, hit_team_members, override_team, override_mask)
 	start = start or self:GetShootPos()
 	dir = dir or self:GetAimVector()
@@ -844,6 +852,7 @@ function meta:MeleeTrace(distance, size, start, dir, hit_team_members, override_
 	return util_TraceHull(melee_trace)
 end
 
+---Anti lag
 local function InvalidateCompensatedTrace(tr, start, distance)
 	-- Need to do this or people with 300 ping will be hitting people across rooms
 	if tr.Entity:IsValid() and tr.Entity:IsPlayer() and tr.HitPos:DistToSqr(start) > distance * distance + 144 then -- Give just a little bit of leeway
@@ -853,6 +862,7 @@ local function InvalidateCompensatedTrace(tr, start, distance)
 	end
 end
 
+---Compensated hit trace
 function meta:CompensatedMeleeTrace(distance, size, start, dir, hit_team_members, override_team)
 	start = start or self:GetShootPos()
 	dir = dir or self:GetAimVector()
@@ -867,57 +877,69 @@ function meta:CompensatedMeleeTrace(distance, size, start, dir, hit_team_members
 	return tr
 end
 
-function meta:CompensatedPenetratingMeleeTrace(distance, size, start, dir, hit_team_members)
+---Compensated penetrating hit trace
+function meta:CompensatedPenetratingMeleeTrace(distance, size, start, dir, hit_team_members, num_traces)
 	start = start or self:GetShootPos()
 	dir = dir or self:GetAimVector()
 
 	self:LagCompensation(true)
-	local t = self:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members)
+	local t = self:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members, num_traces)
 	self:LagCompensation(false)
 
-	for _, tr in pairs(t) do
+	local tr
+	local tlen = #t
+	for i=1, tlen do
+		tr = t[i]
 		InvalidateCompensatedTrace(tr, start, distance)
 	end
 
 	return t
 end
 
-function meta:CompensatedZombieMeleeTrace(distance, size, start, dir, hit_team_members)
+---Zombie melee trace
+function meta:CompensatedZombieMeleeTrace(distance, size, start, dir, hit_team_members, num_traces)
 	start = start or self:GetShootPos()
 	dir = dir or self:GetAimVector()
 
 	self:LagCompensation(true)
-
 	local hit_entities = {}
 
-	local t, hitprop = self:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members)
-	local t_legs = self:PenetratingMeleeTrace(distance, size, self:WorldSpaceCenter(), dir, hit_team_members)
+	local t, hitprop = self:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members, num_traces)
+	local t_legs = self:PenetratingMeleeTrace(distance, size, self:WorldSpaceCenter(), dir, hit_team_members, num_traces)
+	local tr
+	local tlen = #t
 
-	for _, tr in pairs(t) do
+	for i=1, tlen do
+		tr = t[i]
 		hit_entities[tr.Entity] = true
 	end
 
 	if not hitprop then
-		for _, tr in pairs(t_legs) do
+		tlen = #t_legs
+		for i=1, tlen do
+			tr = t_legs[i]
 			if not hit_entities[tr.Entity] then
 				t[#t + 1] = tr
 			end
 		end
 	end
+	self:LagCompensation(false)
 
-	for _, tr in pairs(t) do
+	tlen = #t
+	for i=1, tlen do
+		tr = t[i]
 		InvalidateCompensatedTrace(tr, tr.StartPos, distance)
 	end
-
-	self:LagCompensation(false)
 
 	return t
 end
 
-function meta:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members)
+---Penetrating melee trace
+function meta:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members, num_traces)
 	start = start or self:GetShootPos()
 	dir = dir or self:GetAimVector()
 	hit_team_members = hit_team_members or GAMEMODE.RoundEnded
+	num_traces = num_traces or 16
 
 	local tr, ent
 
@@ -937,34 +959,32 @@ function meta:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members
 
 	local t = {}
 	local onlyhitworld
-	for i=1, 50 do
+	local trace_num
+	for i=1, num_traces do
 		tr = util_TraceLine(melee_trace)
 
-		if not tr.Hit then
-			tr = util_TraceHull(melee_trace)
-		end
-
+		if not tr.Hit then tr = util_TraceHull(melee_trace) end
 		if not tr.Hit then break end
 
+		trace_num = #t + 1
 		if tr.HitWorld then
-			table.insert(t, tr)
+			t[trace_num] = tr
+			onlyhitworld = true
 			break
 		end
-
-		if onlyhitworld then break end
 
 		CheckFHB(tr)
 
 		ent = tr.Entity
-		if ent:IsValid() then
-			if not ent:IsPlayer() then
-				melee_trace.mask = MASK_SOLID_BRUSHONLY
-				onlyhitworld = true
-			end
-
-			table.insert(t, tr)
-			temp_pen_ents[ent] = true
+		if not ent:IsValid() then continue end
+		if not ent:IsPlayer() then
+			melee_trace.mask = MASK_SOLID_BRUSHONLY
+			onlyhitworld = true
+			break
 		end
+
+		t[trace_num] = tr
+		temp_pen_ents[ent] = true
 	end
 
 	temp_pen_ents = {}
@@ -972,6 +992,7 @@ function meta:PenetratingMeleeTrace(distance, size, start, dir, hit_team_members
 	return t, onlyhitworld
 end
 
+---Should I be ghosted?
 function meta:ActiveBarricadeGhosting(override)
 	if P_Team(self) ~= TEAM_HUMAN and not override or not self:GetBarricadeGhosting() then return false end
 
@@ -982,8 +1003,12 @@ function meta:ActiveBarricadeGhosting(override)
 	max.x = max.x - 1
 	max.y = max.y - 1
 
-	for _, ent in pairs(ents.FindInBox(min, max)) do
-		if ent and ent:IsValid() and self:ShouldBarricadeGhostWith(ent) then return true end
+	local ent
+	local find_func = ents.FindInBox(min, max)
+	local len = #find_func
+	for i=1, len do
+		ent = find_func[i]
+		if E_IsValid(ent) and self:ShouldBarricadeGhostWith(ent) then return true end
 	end
 
 	return false
@@ -1010,12 +1035,16 @@ function meta:NearestRemantler()
 	local remantlers = ents.FindByClass("prop_remantler")
 	local min, remantler = 99999
 
-	for _, ent in pairs(remantlers) do
+	local r_len = #remantlers
+	local ent
+	for i=1, r_len do
+		ent = remantlers[i]
 		local nearpoint = ent:NearestPoint(pos)
 		local trmatch = self:TraceLine(100).Entity == ent
 		local dist = trmatch and 0 or pos:DistToSqr(nearpoint)
 		if pos:DistToSqr(nearpoint) <= 10000 and dist < min then
 			remantler = ent
+			break
 		end
 	end
 
